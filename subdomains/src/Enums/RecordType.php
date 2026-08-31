@@ -22,9 +22,13 @@ enum RecordType: string implements HasLabel
      */
     public static function availableRecordTypes(Server $server): array
     {
+        if (!$server->allocation) {
+            return [];
+        }
+
         $types = [];
 
-        if ($server->allocation && !in_array($server->allocation->ip, ['0.0.0.0', '::'])) {
+        if (!in_array($server->allocation->ip, ['0.0.0.0', '::'])) {
             if (is_ipv6($server->allocation->ip)) {
                 $types[self::AAAA->name] = self::AAAA->value;
             } else {
