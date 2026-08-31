@@ -17,6 +17,9 @@ enum RecordType: string implements HasLabel
         return $this->name;
     }
 
+    /**
+     * @return array<string>
+     */
     public static function availableRecordTypes(Server $server): array
     {
         $types = [];
@@ -30,7 +33,7 @@ enum RecordType: string implements HasLabel
         }
 
         // @phpstan-ignore property.notFound
-        if (!is_null($server->node->subdomain_target)) {
+        if ($server->node->subdomain_target) {
             $types[self::CNAME->name] = self::CNAME->value;
             $types[self::SRV->name] = self::SRV->value;
         }

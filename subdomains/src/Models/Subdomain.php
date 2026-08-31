@@ -124,6 +124,9 @@ class Subdomain extends Model implements HasLabel
                     'proxied' => false,
                 ];
                 break;
+
+            default:
+                throw new Exception('Requested subdomain type is unsupported');
         }
 
         // @phpstan-ignore staticMethod.notFound
