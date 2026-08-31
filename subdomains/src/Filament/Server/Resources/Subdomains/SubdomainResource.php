@@ -39,10 +39,7 @@ class SubdomainResource extends Resource
 
     public static function canAccess(): bool
     {
-        /** @var Server $server */
-        $server = Filament::getTenant();
-
-        return parent::canAccess() && $server->allocation && !in_array($server->allocation->ip, ['0.0.0.0', '::']) && CloudflareDomain::count() > 0;
+        return parent::canAccess() && CloudflareDomain::count() > 0 && count(self::availableRecordTypes()) > 0;
     }
 
     public static function getNavigationLabel(): string
@@ -74,6 +71,29 @@ class SubdomainResource extends Resource
         $server = Filament::getTenant();
 
         return $server->subdomain_limit ?? 0;
+    }
+
+    public static function availableRecordTypes(): array
+    {
+        /** @var Server $server */
+        $server = Filament::getTenant();
+
+        $types = [];
+
+        if ($server->allocation && !in_array($server->allocation->ip, ['0.0.0.0', '::'])) {
+            if (is_ipv6($server->allocation->ip)) {
+                $types['AAAA'] = 'AAAA';
+            } else {
+                $types['A'] = 'A';
+            }
+        }
+
+        // @phpstan-ignore property.notFound
+        if (!is_null($server->node->srv_target)) {
+            $types['SRV'] = 'SRV';
+        }
+
+        return $types;
     }
 
     public static function table(Table $table): Table
@@ -163,35 +183,11 @@ class SubdomainResource extends Resource
                 Select::make('record_type')
                     ->label(trans('subdomains::strings.record_type'))
                     ->disabledOn('edit')
-                    ->hidden(function () {
-                        /** @var Server $server */
-                        $server = Filament::getTenant();
-
-                        // @phpstan-ignore property.notFound
-                        return is_null($server->node->srv_target);
-                    })
-                    ->dehydratedWhenHidden()
+                    ->disabled(fn () => count(self::availableRecordTypes()) <= 1)
                     ->required()
                     ->selectablePlaceholder(false)
-                    ->options(function () {
-                        /** @var Server $server */
-                        $server = Filament::getTenant();
-
-                        $types = is_ipv6($server->allocation->ip) ? ['AAAA' => 'AAAA'] : ['A' => 'A'];
-
-                        // @phpstan-ignore property.notFound
-                        if (!is_null($server->node->srv_target)) {
-                            $types['SRV'] = 'SRV';
-                        }
-
-                        return $types;
-                    })
-                    ->default(function () {
-                        /** @var Server $server */
-                        $server = Filament::getTenant();
-
-                        return is_ipv6($server->allocation->ip) ? 'AAAA' : 'A';
-                    }),
+                    ->options(self::availableRecordTypes())
+                    ->default(array_first(self::availableRecordTypes())),
             ]);
     }
 
