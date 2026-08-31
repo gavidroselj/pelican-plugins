@@ -62,12 +62,12 @@ class Subdomain extends Model implements HasLabel
             throw new Exception('Server has no allocation');
         }
 
+        $subdomainTarget = $this->server->node->subdomain_target; // @phpstan-ignore property.notFound
+
         switch ($this->record_type) {
             case 'SRV':
-                $srvTarget = $this->server->node->srv_target; // @phpstan-ignore property.notFound
-
-                if (!$srvTarget) {
-                    throw new Exception('Node has no SRV target');
+                if (!$subdomainTarget) {
+                    throw new Exception('Node has no Subdomain target');
                 }
 
                 $srvServiceType = SRVServiceType::fromServer($this->server);
@@ -85,7 +85,7 @@ class Subdomain extends Model implements HasLabel
                     'data' => [
                         'port' => $this->server->allocation->port,
                         'priority' => 0,
-                        'target' => $srvTarget,
+                        'target' => $subdomainTarget,
                         'weight' => 0,
                     ],
                     'proxied' => false,
@@ -93,14 +93,17 @@ class Subdomain extends Model implements HasLabel
                 break;
 
             case 'CNAME':
+                if (!$subdomainTarget) {
+                    throw new Exception('Node has no Subdomain target');
+                }
+
                 $searchName = $this->domain->prependPrefix($this->name);
-                $srvTarget = $this->server->node->srv_target; // @phpstan-ignore property.notFound
 
                 $payload = [
                     'name' => $searchName,
                     'type' => $this->record_type,
                     'comment' => 'Created by Pelican Subdomains plugin',
-                    'content' => $srvTarget,
+                    'content' => $subdomainTarget,
                     'proxied' => false,
                 ];
                 break;

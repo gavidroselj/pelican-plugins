@@ -16,8 +16,8 @@ return [
     'prefix' => 'Prefix',
     'record_type' => 'Record type',
     'is_synced' => 'Is Synced?',
-    'srv_target' => 'SRV target',
-    'no_srv_target' => 'No SRV target',
+    'subdomain_target' => 'Subdomain target',
+    'no_subdomain_target' => 'No Subdomain target',
 
     'sync' => 'Sync',
 

@@ -30,7 +30,7 @@ enum RecordType: string implements HasLabel
         }
 
         // @phpstan-ignore property.notFound
-        if (!is_null($server->node->srv_target)) {
+        if (!is_null($server->node->subdomain_target)) {
             $types[self::CNAME->name] = self::CNAME->value;
             $types[self::SRV->name] = self::SRV->value;
         }
