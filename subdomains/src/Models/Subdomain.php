@@ -52,7 +52,7 @@ class Subdomain extends Model implements HasLabel
 
     public function getLabel(): string|Htmlable|null
     {
-        return $this->name . '.' . $this->domain->name;
+        return $this->name . '.' . $this->domain->nameWithPrefix();
     }
 
     /** @throws Exception */
@@ -75,7 +75,7 @@ class Subdomain extends Model implements HasLabel
                 throw new Exception('Server has no SRV type');
             }
 
-            $searchName = "$srvServiceType->value.$this->name";
+            $searchName = $this->domain->prependPrefix("$srvServiceType->value.$this->name");
 
             $payload = [
                 'name' => $searchName,
@@ -94,7 +94,7 @@ class Subdomain extends Model implements HasLabel
                 throw new Exception('Server has invalid allocation ip (0.0.0.0 or ::)');
             }
 
-            $searchName = $this->name;
+            $searchName = $this->domain->prependPrefix($this->name);
 
             $payload = [
                 'name' => $searchName,
