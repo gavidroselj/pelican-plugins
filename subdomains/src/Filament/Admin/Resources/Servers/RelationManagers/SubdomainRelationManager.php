@@ -3,6 +3,7 @@
 namespace Boy132\Subdomains\Filament\Admin\Resources\Servers\RelationManagers;
 
 use App\Models\Server;
+use Boy132\Subdomains\Enums\RecordType;
 use Boy132\Subdomains\Models\CloudflareDomain;
 use Boy132\Subdomains\Models\Subdomain;
 use Boy132\Subdomains\Rules\NotOnBlacklist;
@@ -84,7 +85,7 @@ class SubdomainRelationManager extends RelationManager
                     }),
                 CreateAction::make()
                     ->visible(fn () => CloudflareDomain::count() > 0)
-                    ->disabled(fn () => !$this->getOwnerRecord()->allocation || in_array($this->getOwnerRecord()->allocation->ip, ['0.0.0.0', '::']))
+                    ->disabled(fn () => count(RecordType::availableRecordTypes($this->getOwnerRecord())) <= 0)
                     ->createAnother(false)
                     ->action(function (array $data, SubdomainService $service) {
                         try {
@@ -132,21 +133,11 @@ class SubdomainRelationManager extends RelationManager
                 Select::make('record_type')
                     ->label(trans('subdomains::strings.record_type'))
                     ->disabledOn('edit')
-                    ->hidden(fn () => is_null($this->getOwnerRecord()->node->srv_target)) // @phpstan-ignore property.notFound
-                    ->dehydratedWhenHidden()
+                    ->disabled(fn () => count(RecordType::availableRecordTypes($this->getOwnerRecord())) <= 1)
                     ->required()
                     ->selectablePlaceholder(false)
-                    ->options(function () {
-                        $types = is_ipv6($this->getOwnerRecord()->allocation->ip) ? ['AAAA' => 'AAAA'] : ['A' => 'A'];
-
-                        // @phpstan-ignore property.notFound
-                        if (!is_null($this->getOwnerRecord()->node->srv_target)) {
-                            $types['SRV'] = 'SRV';
-                        }
-
-                        return $types;
-                    })
-                    ->default(fn () => is_ipv6($this->getOwnerRecord()->allocation->ip) ? 'AAAA' : 'A'),
+                    ->options(RecordType::availableRecordTypes($this->getOwnerRecord()))
+                    ->default(array_first(RecordType::availableRecordTypes($this->getOwnerRecord()))),
             ]);
     }
 }

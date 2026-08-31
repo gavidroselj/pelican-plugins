@@ -62,47 +62,65 @@ class Subdomain extends Model implements HasLabel
             throw new Exception('Server has no allocation');
         }
 
-        if ($this->record_type === 'SRV') {
-            $srvTarget = $this->server->node->srv_target; // @phpstan-ignore property.notFound
+        switch ($this->record_type) {
+            case 'SRV':
+                $srvTarget = $this->server->node->srv_target; // @phpstan-ignore property.notFound
 
-            if (!$srvTarget) {
-                throw new Exception('Node has no SRV target');
-            }
+                if (!$srvTarget) {
+                    throw new Exception('Node has no SRV target');
+                }
 
-            $srvServiceType = SRVServiceType::fromServer($this->server);
+                $srvServiceType = SRVServiceType::fromServer($this->server);
 
-            if (!$srvServiceType) {
-                throw new Exception('Server has no SRV type');
-            }
+                if (!$srvServiceType) {
+                    throw new Exception('Server has no SRV type');
+                }
 
-            $searchName = $this->domain->prependPrefix("$srvServiceType->value.$this->name");
+                $searchName = $this->domain->prependPrefix("$srvServiceType->value.$this->name");
 
-            $payload = [
-                'name' => $searchName,
-                'type' => $this->record_type,
-                'comment' => 'Created by Pelican Subdomains plugin',
-                'data' => [
-                    'port' => $this->server->allocation->port,
-                    'priority' => 0,
-                    'target' => $srvTarget,
-                    'weight' => 0,
-                ],
-                'proxied' => false,
-            ];
-        } else {
-            if (in_array($this->server->allocation->ip, ['0.0.0.0', '::'])) {
-                throw new Exception('Server has invalid allocation ip (0.0.0.0 or ::)');
-            }
+                $payload = [
+                    'name' => $searchName,
+                    'type' => $this->record_type,
+                    'comment' => 'Created by Pelican Subdomains plugin',
+                    'data' => [
+                        'port' => $this->server->allocation->port,
+                        'priority' => 0,
+                        'target' => $srvTarget,
+                        'weight' => 0,
+                    ],
+                    'proxied' => false,
+                ];
+                break;
 
-            $searchName = $this->domain->prependPrefix($this->name);
+            case 'CNAME':
+                $searchName = $this->domain->prependPrefix($this->name);
+                $srvTarget = $this->server->node->srv_target; // @phpstan-ignore property.notFound
 
-            $payload = [
-                'name' => $searchName,
-                'type' => $this->record_type,
-                'comment' => 'Created by Pelican Subdomains plugin',
-                'content' => $this->server->allocation->ip,
-                'proxied' => false,
-            ];
+                $payload = [
+                    'name' => $searchName,
+                    'type' => $this->record_type,
+                    'comment' => 'Created by Pelican Subdomains plugin',
+                    'content' => $srvTarget,
+                    'proxied' => false,
+                ];
+                break;
+
+            case 'A':
+            case 'AAAA':
+                if (in_array($this->server->allocation->ip, ['0.0.0.0', '::'])) {
+                    throw new Exception('Server has invalid allocation ip (0.0.0.0 or ::)');
+                }
+
+                $searchName = $this->domain->prependPrefix($this->name);
+
+                $payload = [
+                    'name' => $searchName,
+                    'type' => $this->record_type,
+                    'comment' => 'Created by Pelican Subdomains plugin',
+                    'content' => $this->server->allocation->ip,
+                    'proxied' => false,
+                ];
+                break;
         }
 
         // @phpstan-ignore staticMethod.notFound
