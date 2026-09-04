@@ -58,14 +58,19 @@ class Subdomain extends Model implements HasLabel
     /** @throws Exception */
     public function upsertOnCloudflare(): void
     {
-        if (!$this->server->allocation) {
-            throw new Exception('Server has no allocation');
+        // Explicitly forbid ANY record creation when primary allocation is invalid
+        if ($this->server->allocation && in_array($this->server->allocation->ip, ['0.0.0.0', '::'])) {
+            throw new Exception('Server has invalid allocation ip (0.0.0.0 or ::)');
         }
 
         $subdomainTarget = $this->server->node->subdomain_target; // @phpstan-ignore property.notFound
 
         switch ($this->record_type) {
             case 'SRV':
+                if (!$this->server->allocation) {
+                    throw new Exception('Server has no allocation');
+                }
+
                 if (!$subdomainTarget) {
                     throw new Exception('Node has no Subdomain target');
                 }
@@ -110,8 +115,8 @@ class Subdomain extends Model implements HasLabel
 
             case 'A':
             case 'AAAA':
-                if (in_array($this->server->allocation->ip, ['0.0.0.0', '::'])) {
-                    throw new Exception('Server has invalid allocation ip (0.0.0.0 or ::)');
+                if (!$this->server->allocation) {
+                    throw new Exception('Server has no allocation');
                 }
 
                 $searchName = $this->domain->prependPrefix($this->name);

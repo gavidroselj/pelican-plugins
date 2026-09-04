@@ -22,13 +22,14 @@ enum RecordType: string implements HasLabel
      */
     public static function availableRecordTypes(Server $server): array
     {
-        if (!$server->allocation) {
+        // Explicitly forbid ANY record creation when primary allocation is invalid
+        if ($server->allocation && in_array($server->allocation->ip, ['0.0.0.0', '::'])) {
             return [];
         }
 
         $types = [];
 
-        if (!in_array($server->allocation->ip, ['0.0.0.0', '::'])) {
+        if ($server->allocation) {
             if (is_ipv6($server->allocation->ip)) {
                 $types[self::AAAA->name] = self::AAAA->value;
             } else {
@@ -39,6 +40,10 @@ enum RecordType: string implements HasLabel
         // @phpstan-ignore property.notFound
         if ($server->node->subdomain_target) {
             $types[self::CNAME->name] = self::CNAME->value;
+        }
+
+        // @phpstan-ignore property.notFound
+        if ($server->allocation && $server->node->subdomain_target) {
             $types[self::SRV->name] = self::SRV->value;
         }
 

@@ -21,11 +21,13 @@ Subdomains support several different DNS Record types. Each type has different r
 
 If a DNS Record type is not available, check whether all of it's requirements have been met.
 
-### Valid primary allocation addresses
+### Server primary allocations
 
-A and AAAA Subdomains point to the IP address of the server's primary allocation, so they require that IP address to be valid.
+A and AAAA Subdomains will use the IP of the server's primary allocation as their target. SRV records will use the primary allocation's port as part of their target.
 
-The only invalid values are `0.0.0.0` and `::`. They should be changed to proper IP addresses on which your servers can be reached.
+IPs such as `0.0.0.0` and `::` are considered invalid for the purposes of creating subdomains. They should be changed to proper IP addresses on which your servers can be reached.
+
+**IMPORTANT: In order to create subdomains for a server, that server's primary allocation MUST have a valid IP address.** This also applies for CNAME and SRV Subdomains.
 
 ### Subdomain targets
 
