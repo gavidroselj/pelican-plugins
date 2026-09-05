@@ -2,9 +2,12 @@
 
 namespace Boy132\Subdomains\Models;
 
+use Boy132\Subdomains\Enums\RecordType;
 use Exception;
+use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -12,6 +15,7 @@ use Illuminate\Support\Facades\Http;
  * @property string $name
  * @property ?string $prefix
  * @property ?string $cloudflare_id
+ * @property Collection<RecordType> $allowed_record_types
  */
 class CloudflareDomain extends Model
 {
@@ -19,6 +23,7 @@ class CloudflareDomain extends Model
         'name',
         'prefix',
         'cloudflare_id',
+        'allowed_record_types',
     ];
 
     protected static function boot(): void
@@ -28,6 +33,17 @@ class CloudflareDomain extends Model
         static::created(function (self $model) {
             $model->fetchCloudflareId();
         });
+
+        static::saving(function (self $model): void {
+            $model->allowed_record_types = $model->allowed_record_types->sort();
+        });
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'allowed_record_types' => AsEnumCollection::of(RecordType::class),
+        ];
     }
 
     public function subdomains(): HasMany

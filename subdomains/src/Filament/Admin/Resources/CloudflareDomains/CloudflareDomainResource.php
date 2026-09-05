@@ -2,12 +2,15 @@
 
 namespace Boy132\Subdomains\Filament\Admin\Resources\CloudflareDomains;
 
+use Boy132\Subdomains\Enums\RecordType;
 use Boy132\Subdomains\Filament\Admin\Resources\CloudflareDomains\Pages\ManageCloudflareDomains;
 use Boy132\Subdomains\Models\CloudflareDomain;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -61,6 +64,9 @@ class CloudflareDomainResource extends Resource
                 TextColumn::make('subdomains_count')
                     ->label(trans_choice('subdomains::strings.subdomain', 2))
                     ->counts('subdomains'),
+                TextColumn::make('allowed_record_types')
+                    ->label(trans('subdomains::strings.allowed_record_types'))
+                    ->badge(),
                 IconColumn::make('is_synced')
                     ->label(trans('subdomains::strings.is_synced'))
                     ->state(fn (CloudflareDomain $domain) => !is_null($domain->cloudflare_id))
@@ -70,6 +76,7 @@ class CloudflareDomainResource extends Resource
                     ->tooltip(fn (CloudflareDomain $domain) => $domain->cloudflare_id),
             ])
             ->recordActions([
+                EditAction::make('edit'),
                 Action::make('sync')
                     ->tooltip(trans('subdomains::strings.sync'))
                     ->icon('tabler-refresh')
@@ -123,9 +130,16 @@ class CloudflareDomainResource extends Resource
                 TextInput::make('name')
                     ->label(trans('subdomains::strings.name'))
                     ->required()
-                    ->unique(),
+                    ->unique()
+                    ->disabledOn('edit'),
                 TextInput::make('prefix')
-                    ->label(trans('subdomains::strings.prefix')),
+                    ->label(trans('subdomains::strings.prefix'))
+                    ->disabledOn('edit'),
+                Select::make('allowed_record_types')
+                    ->label(trans('subdomains::strings.allowed_record_types'))
+                    ->options(RecordType::class)
+                    ->multiple()
+                    ->default(RecordType::cases()),
             ]);
     }
 
