@@ -3,6 +3,7 @@
 namespace Boy132\Subdomains\Models;
 
 use App\Models\Server;
+use Boy132\Subdomains\Enums\RecordType;
 use Boy132\Subdomains\Enums\SRVServiceType;
 use Exception;
 use Filament\Support\Contracts\HasLabel;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Http;
 /**
  * @property int $id
  * @property string $name
- * @property string $record_type
+ * @property RecordType $record_type
  * @property ?string $cloudflare_id
  * @property int $domain_id
  * @property CloudflareDomain $domain
@@ -38,6 +39,13 @@ class Subdomain extends Model implements HasLabel
         static::deleted(function (self $model) {
             $model->deleteOnCloudflare();
         });
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'record_type' => RecordType::class,
+        ];
     }
 
     public function domain(): BelongsTo
@@ -65,8 +73,12 @@ class Subdomain extends Model implements HasLabel
 
         $subdomainTarget = $this->server->node->subdomain_target; // @phpstan-ignore property.notFound
 
+        if (!$this->domain->allowed_record_types->contains($this->record_type)) {
+            throw new Exception('Record type ' . $this->record_type->value . ' is not permitted on domain ' . $this->domain->name);
+        }
+
         switch ($this->record_type) {
-            case 'SRV':
+            case RecordType::SRV:
                 if (!$this->server->allocation) {
                     throw new Exception('Server has no allocation');
                 }
@@ -97,7 +109,7 @@ class Subdomain extends Model implements HasLabel
                 ];
                 break;
 
-            case 'CNAME':
+            case RecordType::CNAME:
                 if (!$subdomainTarget) {
                     throw new Exception('Node has no Subdomain target');
                 }
@@ -113,8 +125,8 @@ class Subdomain extends Model implements HasLabel
                 ];
                 break;
 
-            case 'A':
-            case 'AAAA':
+            case RecordType::A:
+            case RecordType::AAAA:
                 if (!$this->server->allocation) {
                     throw new Exception('Server has no allocation');
                 }

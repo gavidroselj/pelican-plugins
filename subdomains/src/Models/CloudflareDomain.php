@@ -2,6 +2,7 @@
 
 namespace Boy132\Subdomains\Models;
 
+use App\Models\Server;
 use Boy132\Subdomains\Enums\RecordType;
 use Exception;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
@@ -84,5 +85,50 @@ class CloudflareDomain extends Model
                 throw new Exception($response['errors'][0]['message']);
             }
         }
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function availableRecordTypes(Server $server): array
+    {
+        $allocation = $server->allocation;
+        $subdomain_target = $server->node->subdomain_target; // @phpstan-ignore property.notFound
+        $allowed_record_types = $this->allowed_record_types;
+
+        // Explicitly forbid ANY record creation when primary allocation is invalid
+        if ($allocation && in_array($allocation->ip, ['0.0.0.0', '::'])) {
+            return [];
+        }
+
+        $types = [];
+
+        if ($allowed_record_types->contains(RecordType::A) && $allocation && is_ipv4($allocation->ip)) {
+            $types[RecordType::A->name] = RecordType::A->value;
+        }
+
+        if ($allowed_record_types->contains(RecordType::AAAA) && $allocation && is_ipv6($allocation->ip)) {
+            $types[RecordType::AAAA->name] = RecordType::AAAA->value;
+        }
+
+        if ($allowed_record_types->contains(RecordType::CNAME) && $subdomain_target) {
+            $types[RecordType::CNAME->name] = RecordType::CNAME->value;
+        }
+
+        if ($allowed_record_types->contains(RecordType::SRV) && $allocation && $subdomain_target) {
+            $types[RecordType::SRV->name] = RecordType::SRV->value;
+        }
+
+        return $types;
+    }
+
+    /**
+     * @return self[]
+     */
+    public static function availableDomains(Server $server): array
+    {
+        $domains = self::get();
+
+        return $domains->all();
     }
 }
