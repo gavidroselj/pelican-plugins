@@ -31,4 +31,5 @@ For Palworld servers you need to set `RESTAPIEnabled` to `true` and `RESTAPIPort
 - Minecraft (Java/Bedrock)
 - FiveM/RedM
 - Palworld
-- Any game server that uses the [Source protocol](https://developer.valvesoftware.com/wiki/Server_queries) (e.g. Garry's Mod, Rust, Squad, Barotrauma, Valheim, V Rising, The Forest, Arma 3, Arma Reforger, ARK: SE, Unturned, Insurgency: Sandstorm + more)
+- Any game server that uses [Valve's A2S query protocol](https://developer.valvesoftware.com/wiki/Server_queries), e.g. Garry's Mod, Rust, Barotrauma, Valheim, V Rising, The Forest, Arma 3, Arma Reforger, ARK: SE (ARK: SA will _NOT_ work), Unturned, Insurgency, Insurgency: Sandstorm + many more.
+- Hytale, using the [source query hytale plugin](https://www.curseforge.com/hytale/mods/source-query-a2s) (_without the plugin it will NOT work, other query plugins will also not work_)
