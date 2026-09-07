@@ -5,6 +5,7 @@ namespace Boy132\Subdomains\Filament\Server\Resources\Subdomains;
 use App\Models\Server;
 use App\Traits\Filament\BlockAccessInConflict;
 use App\Traits\Filament\HasLimitBadge;
+use Boy132\Subdomains\Enums\RecordType;
 use Boy132\Subdomains\Filament\Server\Resources\Subdomains\Pages\ListSubdomains;
 use Boy132\Subdomains\Models\CloudflareDomain;
 use Boy132\Subdomains\Models\Subdomain;
@@ -42,7 +43,7 @@ class SubdomainResource extends Resource
         /** @var Server $server */
         $server = Filament::getTenant();
 
-        return parent::canAccess() && $server->allocation && !in_array($server->allocation->ip, ['0.0.0.0', '::']) && CloudflareDomain::count() > 0;
+        return parent::canAccess() && CloudflareDomain::count() > 0 && count(RecordType::availableRecordTypes($server)) > 0;
     }
 
     public static function getNavigationLabel(): string
@@ -138,6 +139,9 @@ class SubdomainResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        /** @var Server $server */
+        $server = Filament::getTenant();
+
         return $schema
             ->components([
                 TextInput::make('name')
@@ -163,35 +167,11 @@ class SubdomainResource extends Resource
                 Select::make('record_type')
                     ->label(trans('subdomains::strings.record_type'))
                     ->disabledOn('edit')
-                    ->hidden(function () {
-                        /** @var Server $server */
-                        $server = Filament::getTenant();
-
-                        // @phpstan-ignore property.notFound
-                        return is_null($server->node->srv_target);
-                    })
-                    ->dehydratedWhenHidden()
+                    ->disabled(fn () => count(RecordType::availableRecordTypes($server)) <= 1)
                     ->required()
                     ->selectablePlaceholder(false)
-                    ->options(function () {
-                        /** @var Server $server */
-                        $server = Filament::getTenant();
-
-                        $types = is_ipv6($server->allocation->ip) ? ['AAAA' => 'AAAA'] : ['A' => 'A'];
-
-                        // @phpstan-ignore property.notFound
-                        if (!is_null($server->node->srv_target)) {
-                            $types['SRV'] = 'SRV';
-                        }
-
-                        return $types;
-                    })
-                    ->default(function () {
-                        /** @var Server $server */
-                        $server = Filament::getTenant();
-
-                        return is_ipv6($server->allocation->ip) ? 'AAAA' : 'A';
-                    }),
+                    ->options(RecordType::availableRecordTypes($server))
+                    ->default(array_first(RecordType::availableRecordTypes($server))),
             ]);
     }
 

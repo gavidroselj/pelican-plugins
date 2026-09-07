@@ -58,51 +58,80 @@ class Subdomain extends Model implements HasLabel
     /** @throws Exception */
     public function upsertOnCloudflare(): void
     {
-        if (!$this->server->allocation) {
-            throw new Exception('Server has no allocation');
+        // Explicitly forbid ANY record creation when primary allocation is invalid
+        if ($this->server->allocation && in_array($this->server->allocation->ip, ['0.0.0.0', '::'])) {
+            throw new Exception('Server has invalid allocation ip (0.0.0.0 or ::)');
         }
 
-        if ($this->record_type === 'SRV') {
-            $srvTarget = $this->server->node->srv_target; // @phpstan-ignore property.notFound
+        $subdomainTarget = $this->server->node->subdomain_target; // @phpstan-ignore property.notFound
 
-            if (!$srvTarget) {
-                throw new Exception('Node has no SRV target');
-            }
+        switch ($this->record_type) {
+            case 'SRV':
+                if (!$this->server->allocation) {
+                    throw new Exception('Server has no allocation');
+                }
 
-            $srvServiceType = SRVServiceType::fromServer($this->server);
+                if (!$subdomainTarget) {
+                    throw new Exception('Node has no Subdomain target');
+                }
 
-            if (!$srvServiceType) {
-                throw new Exception('Server has no SRV type');
-            }
+                $srvServiceType = SRVServiceType::fromServer($this->server);
 
-            $searchName = $this->domain->prependPrefix("$srvServiceType->value.$this->name");
+                if (!$srvServiceType) {
+                    throw new Exception('Server has no SRV type');
+                }
 
-            $payload = [
-                'name' => $searchName,
-                'type' => $this->record_type,
-                'comment' => 'Created by Pelican Subdomains plugin',
-                'data' => [
-                    'port' => $this->server->allocation->port,
-                    'priority' => 0,
-                    'target' => $srvTarget,
-                    'weight' => 0,
-                ],
-                'proxied' => false,
-            ];
-        } else {
-            if (in_array($this->server->allocation->ip, ['0.0.0.0', '::'])) {
-                throw new Exception('Server has invalid allocation ip (0.0.0.0 or ::)');
-            }
+                $searchName = $this->domain->prependPrefix("$srvServiceType->value.$this->name");
 
-            $searchName = $this->domain->prependPrefix($this->name);
+                $payload = [
+                    'name' => $searchName,
+                    'type' => $this->record_type,
+                    'comment' => 'Created by Pelican Subdomains plugin',
+                    'data' => [
+                        'port' => $this->server->allocation->port,
+                        'priority' => 0,
+                        'target' => $subdomainTarget,
+                        'weight' => 0,
+                    ],
+                    'proxied' => false,
+                ];
+                break;
 
-            $payload = [
-                'name' => $searchName,
-                'type' => $this->record_type,
-                'comment' => 'Created by Pelican Subdomains plugin',
-                'content' => $this->server->allocation->ip,
-                'proxied' => false,
-            ];
+            case 'CNAME':
+                if (!$subdomainTarget) {
+                    throw new Exception('Node has no Subdomain target');
+                }
+
+                $searchName = $this->domain->prependPrefix($this->name);
+
+                $payload = [
+                    'name' => $searchName,
+                    'type' => $this->record_type,
+                    'comment' => 'Created by Pelican Subdomains plugin',
+                    'content' => $subdomainTarget,
+                    'proxied' => false,
+                ];
+                break;
+
+            case 'A':
+            case 'AAAA':
+                if (!$this->server->allocation) {
+                    throw new Exception('Server has no allocation');
+                }
+
+                $searchName = $this->domain->prependPrefix($this->name);
+
+                $payload = [
+                    'name' => $searchName,
+                    'type' => $this->record_type,
+                    'comment' => 'Created by Pelican Subdomains plugin',
+                    'content' => $this->server->allocation->ip,
+                    'proxied' => false,
+                ];
+                break;
+
+            default:
+                throw new Exception('Requested subdomain type is unsupported');
         }
 
         // @phpstan-ignore staticMethod.notFound
