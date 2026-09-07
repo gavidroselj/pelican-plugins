@@ -72,6 +72,12 @@ class PlayerCounterSeeder extends Seeder
             'query_port_variable' => null,
         ],
         [
+            'names' => 'Palworld',
+            'query_type' => 'palworld',
+            'query_port_offset' => null,
+            'query_port_variable' => null,
+        ],
+        [
             'tag' => 'bedrock',
             'query_type' => 'minecraft_bedrock',
             'query_port_offset' => null,
