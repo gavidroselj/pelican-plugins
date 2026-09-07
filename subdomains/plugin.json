@@ -1,8 +1,8 @@
 {
     "id": "subdomains",
     "name": "Subdomains",
-    "author": "Boy132 & HarlequinSin",
-    "version": "1.1.0",
+    "author": "Boy132 & HarlequinSin & gavidroselj",
+    "version": "1.2.0",
     "description": "Allows users to create subdomains for their servers",
     "category": "plugin",
     "url": "https://hub.pelican.dev/plugins/subdomains",
