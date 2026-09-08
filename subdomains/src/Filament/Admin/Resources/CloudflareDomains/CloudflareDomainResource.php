@@ -15,10 +15,12 @@ use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Validation\Rules\Unique;
 
 class CloudflareDomainResource extends Resource
 {
@@ -130,10 +132,15 @@ class CloudflareDomainResource extends Resource
                 TextInput::make('name')
                     ->label(trans('subdomains::strings.name'))
                     ->required()
-                    ->unique()
+                    ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
+                        ->where('name', $get('name'))
+                        ->where('prefix', $get('prefix')))
                     ->disabledOn('edit'),
                 TextInput::make('prefix')
                     ->label(trans('subdomains::strings.prefix'))
+                    ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
+                        ->where('name', $get('name'))
+                        ->where('prefix', $get('prefix')))
                     ->disabledOn('edit'),
                 Select::make('allowed_record_types')
                     ->label(trans('subdomains::strings.allowed_record_types'))

@@ -74,7 +74,7 @@ class Subdomain extends Model implements HasLabel
         $subdomainTarget = $this->server->node->subdomain_target; // @phpstan-ignore property.notFound
 
         if (!$this->domain->allowed_record_types->contains($this->record_type)) {
-            throw new Exception('Record type ' . $this->record_type->value . ' is not permitted on domain ' . $this->domain->name);
+            throw new Exception('Record type ' . $this->record_type->value . ' is not permitted on domain ' . $this->domain->nameWithPrefix());
         }
 
         switch ($this->record_type) {
