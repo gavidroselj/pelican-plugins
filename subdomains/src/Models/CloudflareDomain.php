@@ -135,6 +135,10 @@ class CloudflareDomain extends Model
      */
     public static function availableDomains(Server $server): Collection
     {
-        return $server->node->belongsToMany(self::class)->get();
+        $viableDomains = $server->node->belongsToMany(self::class)->get();
+
+        $availableDomains = $viableDomains->filter(fn (self $item) => !$item->availableRecordTypes($server)->isEmpty());
+
+        return $availableDomains;
     }
 }
