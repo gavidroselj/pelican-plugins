@@ -28,7 +28,7 @@ return new class extends Migration
 
         DB::table('cloudflare_domains')
             ->whereNotIn('id', $uniqueDomainIds)
-            ->update(['name' => DB::raw("CONCAT(name, '-', id)")]);
+            ->update(['name' => DB::raw("CONCAT(name, '_', id)")]);
 
         Schema::table('cloudflare_domains', function (Blueprint $table) {
             $table->dropUnique(['name', 'prefix']);

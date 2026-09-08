@@ -5,6 +5,7 @@ namespace Boy132\Subdomains\Models;
 use App\Models\Node;
 use App\Models\Server;
 use Boy132\Subdomains\Enums\RecordType;
+use Boy132\Subdomains\Enums\SRVServiceType;
 use Exception;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -101,8 +102,9 @@ class CloudflareDomain extends Model
     public function availableRecordTypes(Server $server): Collection
     {
         $allocation = $server->allocation;
-        $subdomain_target = $server->node->subdomain_target; // @phpstan-ignore property.notFound
-        $allowed_record_types = $this->allowed_record_types;
+        $subdomainTarget = $server->node->subdomain_target; // @phpstan-ignore property.notFound
+        $allowedRecordTypes = $this->allowed_record_types;
+        $srvServiceType = SRVServiceType::fromServer($this->server);
 
         $types = new Collection();
 
@@ -111,19 +113,19 @@ class CloudflareDomain extends Model
             return $types;
         }
 
-        if ($allowed_record_types->contains(RecordType::A) && $allocation && is_ipv4($allocation->ip)) {
+        if ($allowedRecordTypes->contains(RecordType::A) && $allocation && is_ipv4($allocation->ip)) {
             $types->add(RecordType::A);
         }
 
-        if ($allowed_record_types->contains(RecordType::AAAA) && $allocation && is_ipv6($allocation->ip)) {
+        if ($allowedRecordTypes->contains(RecordType::AAAA) && $allocation && is_ipv6($allocation->ip)) {
             $types->add(RecordType::AAAA);
         }
 
-        if ($allowed_record_types->contains(RecordType::CNAME) && $subdomain_target) {
+        if ($allowedRecordTypes->contains(RecordType::CNAME) && $subdomainTarget) {
             $types->add(RecordType::CNAME);
         }
 
-        if ($allowed_record_types->contains(RecordType::SRV) && $allocation && $subdomain_target) {
+        if ($allowedRecordTypes->contains(RecordType::SRV) && $allocation && $subdomainTarget && $srvServiceType) {
             $types->add(RecordType::SRV);
         }
 
