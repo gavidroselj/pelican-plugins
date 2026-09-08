@@ -104,7 +104,7 @@ class CloudflareDomain extends Model
         $allocation = $server->allocation;
         $subdomainTarget = $server->node->subdomain_target; // @phpstan-ignore property.notFound
         $allowedRecordTypes = $this->allowed_record_types;
-        $srvServiceType = SRVServiceType::fromServer($this->server);
+        $srvServiceType = SRVServiceType::fromServer($server);
 
         $types = new Collection();
 
