@@ -136,7 +136,7 @@ class SubdomainRelationManager extends RelationManager
                     ->disabledOn('edit')
                     ->required()
                     ->selectablePlaceholder(false)
-                    ->options(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())),
+                    ->options(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())->pluck('name', 'value')),
             ]);
     }
 }

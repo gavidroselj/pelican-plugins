@@ -170,7 +170,7 @@ class SubdomainResource extends Resource
                     ->disabledOn('edit')
                     ->required()
                     ->selectablePlaceholder(false)
-                    ->options(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($server)),
+                    ->options(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($server)->pluck('name', 'value')),
             ]);
     }
 

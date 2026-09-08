@@ -96,35 +96,36 @@ class CloudflareDomain extends Model
     }
 
     /**
-     * @return array<string>
+     * @return Collection<string>
      */
-    public function availableRecordTypes(Server $server): array
+    public function availableRecordTypes(Server $server): Collection
     {
         $allocation = $server->allocation;
         $subdomain_target = $server->node->subdomain_target; // @phpstan-ignore property.notFound
         $allowed_record_types = $this->allowed_record_types;
 
+        $types = new Collection();
+
         // Explicitly forbid ANY record creation when primary allocation is invalid
         if ($allocation && in_array($allocation->ip, ['0.0.0.0', '::'])) {
-            return [];
+            return $types;
         }
 
-        $types = [];
 
         if ($allowed_record_types->contains(RecordType::A) && $allocation && is_ipv4($allocation->ip)) {
-            $types[RecordType::A->name] = RecordType::A->value;
+            $types->add(RecordType::A);
         }
 
         if ($allowed_record_types->contains(RecordType::AAAA) && $allocation && is_ipv6($allocation->ip)) {
-            $types[RecordType::AAAA->name] = RecordType::AAAA->value;
+            $types->add(RecordType::AAAA);
         }
 
         if ($allowed_record_types->contains(RecordType::CNAME) && $subdomain_target) {
-            $types[RecordType::CNAME->name] = RecordType::CNAME->value;
+            $types->add(RecordType::CNAME);
         }
 
         if ($allowed_record_types->contains(RecordType::SRV) && $allocation && $subdomain_target) {
-            $types[RecordType::SRV->name] = RecordType::SRV->value;
+            $types->add(RecordType::SRV);
         }
 
         return $types;
