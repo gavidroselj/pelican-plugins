@@ -129,14 +129,17 @@ class SubdomainRelationManager extends RelationManager
                     ->default(CloudflareDomain::availableDomains($this->getOwnerRecord())->first()->id)
                     ->preload()
                     ->searchable()
-                    ->afterStateUpdated(fn (Set $set) => $set('record_type', ''))
+                    ->afterStateUpdated(fn (Get $get, Set $set) => $set('record_type', CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())->first()))
                     ->live(),
                 Select::make('record_type')
                     ->label(trans('subdomains::strings.record_type'))
                     ->disabledOn('edit')
+                    ->disabled(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())->count() <= 1)
+                    ->saved()
                     ->required()
                     ->selectablePlaceholder(false)
-                    ->options(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())),
+                    ->options(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())->pluck('name', 'value'))
+                    ->default(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())->first()),
             ]);
     }
 }
