@@ -102,7 +102,7 @@ class Subdomain extends Model implements HasLabel
 
                 $payload = [
                     'name' => $searchName,
-                    'type' => $this->record_type,
+                    'type' => $this->record_type->value,
                     'comment' => 'Created by Pelican Subdomains plugin',
                     'data' => [
                         'port' => $this->server->allocation->port,
@@ -123,7 +123,7 @@ class Subdomain extends Model implements HasLabel
 
                 $payload = [
                     'name' => $searchName,
-                    'type' => $this->record_type,
+                    'type' => $this->record_type->value,
                     'comment' => 'Created by Pelican Subdomains plugin',
                     'content' => $subdomainTarget,
                     'proxied' => false,
@@ -140,7 +140,7 @@ class Subdomain extends Model implements HasLabel
 
                 $payload = [
                     'name' => $searchName,
-                    'type' => $this->record_type,
+                    'type' => $this->record_type->value,
                     'comment' => 'Created by Pelican Subdomains plugin',
                     'content' => $this->server->allocation->ip,
                     'proxied' => false,

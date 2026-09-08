@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Http;
 /**
  * @property int $id
  * @property string $name
- * @property ?string $prefix
+ * @property string $prefix
  * @property ?string $cloudflare_id
  * @property Collection|Node[] $nodes
  * @property Collection<RecordType> $allowed_record_types
@@ -62,12 +62,12 @@ class CloudflareDomain extends Model
 
     public function nameWithPrefix(): string
     {
-        return is_null($this->prefix) ? $this->name : "$this->prefix.$this->name";
+        return $this->prefix == '' ? $this->name : "$this->prefix.$this->name";
     }
 
     public function prependPrefix(string $subdomain): string
     {
-        return is_null($this->prefix) ? $subdomain : "$subdomain.$this->prefix";
+        return $this->prefix == '' ? $subdomain : "$subdomain.$this->prefix";
     }
 
     /** @throws Exception */

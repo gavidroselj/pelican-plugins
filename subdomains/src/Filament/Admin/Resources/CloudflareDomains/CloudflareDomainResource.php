@@ -138,14 +138,15 @@ class CloudflareDomainResource extends Resource
                     ->required()
                     ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
                         ->where('name', $get('name'))
-                        ->where('prefix', $get('prefix')))
+                        ->where('prefix', is_null($get('prefix')) ? '' : $get('prefix')))
                     ->disabledOn('edit'),
                 TextInput::make('prefix')
                     ->label(trans('subdomains::strings.prefix'))
                     ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
                         ->where('name', $get('name'))
-                        ->where('prefix', $get('prefix')))
-                    ->disabledOn('edit'),
+                        ->where('prefix', is_null($get('prefix')) ? '' : $get('prefix')))
+                    ->disabledOn('edit')
+                    ->dehydrateStateUsing(fn ($state) => is_null($state) ? '' : $state),
                 Select::make('allowed_record_types')
                     ->label(trans('subdomains::strings.allowed_record_types'))
                     ->options(RecordType::class)
