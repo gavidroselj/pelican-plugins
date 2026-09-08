@@ -2,11 +2,13 @@
 
 namespace Boy132\Subdomains\Models;
 
+use App\Models\Node;
 use App\Models\Server;
 use Boy132\Subdomains\Enums\RecordType;
 use Exception;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\Http;
  * @property string $name
  * @property ?string $prefix
  * @property ?string $cloudflare_id
+ * @property Collection|Node[] $nodes
  * @property Collection<RecordType> $allowed_record_types
  */
 class CloudflareDomain extends Model
@@ -50,6 +53,11 @@ class CloudflareDomain extends Model
     public function subdomains(): HasMany
     {
         return $this->hasMany(Subdomain::class, 'domain_id');
+    }
+
+    public function nodes(): BelongsToMany
+    {
+        return $this->belongsToMany(Node::class);
     }
 
     public function nameWithPrefix(): string
@@ -123,12 +131,10 @@ class CloudflareDomain extends Model
     }
 
     /**
-     * @return self[]
+     * @return Collection<self>
      */
-    public static function availableDomains(Server $server): array
+    public static function availableDomains(Server $server): Collection
     {
-        $domains = self::get();
-
-        return $domains->all();
+        return $server->node->belongsToMany(self::class)->get();
     }
 }

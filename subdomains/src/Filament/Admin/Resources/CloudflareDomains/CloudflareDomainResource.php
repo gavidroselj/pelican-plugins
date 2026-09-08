@@ -20,6 +20,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rules\Unique;
 
 class CloudflareDomainResource extends Resource
@@ -68,6 +69,9 @@ class CloudflareDomainResource extends Resource
                     ->counts('subdomains'),
                 TextColumn::make('allowed_record_types')
                     ->label(trans('subdomains::strings.allowed_record_types'))
+                    ->badge(),
+                TextColumn::make('nodes.name')
+                    ->label(trans('subdomains::strings.allowed_nodes'))
                     ->badge(),
                 IconColumn::make('is_synced')
                     ->label(trans('subdomains::strings.is_synced'))
@@ -147,6 +151,12 @@ class CloudflareDomainResource extends Resource
                     ->options(RecordType::class)
                     ->multiple()
                     ->default(RecordType::cases()),
+                Select::make('allowed_nodes')
+                    ->label(trans('subdomains::strings.allowed_nodes'))
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->relationship('nodes', 'name', fn (Builder $query) => $query->whereIn('nodes.id', user()?->accessibleNodes()->pluck('id'))),
             ]);
     }
 

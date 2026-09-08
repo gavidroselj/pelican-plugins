@@ -16,6 +16,7 @@ return [
     'prefix' => 'Prefix',
     'record_type' => 'Record type',
     'allowed_record_types' => 'Allowed Record types',
+    'allowed_nodes' => 'Allowed Nodes',
     'is_synced' => 'Is Synced?',
     'subdomain_target' => 'Subdomain target',
     'no_subdomain_target' => 'No Subdomain target',
