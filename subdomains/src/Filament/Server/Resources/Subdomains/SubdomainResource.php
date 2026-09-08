@@ -156,7 +156,7 @@ class SubdomainResource extends Resource
                     ->label(trans_choice('subdomains::strings.domain', 1))
                     ->disabledOn('edit')
                     ->disabled(fn () => CloudflareDomain::availableDomains($server)->count() <= 1)
-                    ->dehydratedWhenHidden()
+                    ->saved()
                     ->required()
                     ->selectablePlaceholder(false)
                     ->options(CloudflareDomain::availableDomains($server)->mapWithKeys(fn ($domain) => [$domain->id => $domain->nameWithPrefix()]))

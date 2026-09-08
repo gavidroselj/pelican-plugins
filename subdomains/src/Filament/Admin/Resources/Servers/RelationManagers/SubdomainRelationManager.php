@@ -121,7 +121,7 @@ class SubdomainRelationManager extends RelationManager
                     ->label(trans_choice('subdomains::strings.domain', 1))
                     ->disabledOn('edit')
                     ->disabled(fn () => CloudflareDomain::availableDomains($this->getOwnerRecord())->count() <= 1)
-                    ->dehydratedWhenHidden()
+                    ->saved()
                     ->required()
                     ->selectablePlaceholder(false)
                     ->relationship('domain', 'name')
@@ -136,7 +136,7 @@ class SubdomainRelationManager extends RelationManager
                     ->disabledOn('edit')
                     ->required()
                     ->selectablePlaceholder(false)
-                    ->options(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())->pluck('name', 'value')),
+                    ->options(fn (Get $get) => CloudflareDomain::find($get('domain_id'))?->availableRecordTypes($this->getOwnerRecord())),
             ]);
     }
 }

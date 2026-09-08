@@ -111,7 +111,6 @@ class CloudflareDomain extends Model
             return $types;
         }
 
-
         if ($allowed_record_types->contains(RecordType::A) && $allocation && is_ipv4($allocation->ip)) {
             $types->add(RecordType::A);
         }
