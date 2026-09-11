@@ -150,8 +150,7 @@ class CloudflareDomainResource extends Resource
                 Select::make('allowed_record_types')
                     ->label(trans('subdomains::strings.allowed_record_types'))
                     ->options(RecordType::class)
-                    ->multiple()
-                    ->default(RecordType::cases()),
+                    ->multiple(),
                 Select::make('allowed_nodes')
                     ->label(trans('subdomains::strings.allowed_nodes'))
                     ->multiple()

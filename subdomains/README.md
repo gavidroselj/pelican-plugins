@@ -19,8 +19,10 @@ For example: when creating a subdomain `server1` on a domain with name `example.
 
 Domains can be configured to only permit subdomain creation under specific conditions:
 
-- For each domain you must select which DNS Record types can be created on it
-- For each domain you must select the nodes on which it is enabled. Servers on unselected nodes will not have the option to use this domain.
+- For each domain you can select which DNS Record types can be created on it
+- For each domain you can select the nodes on which it is enabled. Servers on unselected nodes will not have the option to use this domain.
+
+Leaving these fields empty will keep all record types / nodes enabled.
 
 ## Configuration
 

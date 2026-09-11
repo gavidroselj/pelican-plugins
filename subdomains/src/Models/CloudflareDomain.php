@@ -104,6 +104,7 @@ class CloudflareDomain extends Model
         $allocation = $server->allocation;
         $subdomainTarget = $server->node->subdomain_target; // @phpstan-ignore property.notFound
         $allowedRecordTypes = $this->allowed_record_types;
+        $allowedRecordsFilterDisabled = $allowedRecordTypes->isEmpty();
         $srvServiceType = SRVServiceType::fromServer($server);
 
         $types = new Collection();
@@ -113,19 +114,19 @@ class CloudflareDomain extends Model
             return $types;
         }
 
-        if ($allowedRecordTypes->contains(RecordType::A) && $allocation && is_ipv4($allocation->ip)) {
+        if (($allowedRecordsFilterDisabled || $allowedRecordTypes->contains(RecordType::A)) && $allocation && is_ipv4($allocation->ip)) {
             $types->add(RecordType::A);
         }
 
-        if ($allowedRecordTypes->contains(RecordType::AAAA) && $allocation && is_ipv6($allocation->ip)) {
+        if (($allowedRecordsFilterDisabled || $allowedRecordTypes->contains(RecordType::AAAA)) && $allocation && is_ipv6($allocation->ip)) {
             $types->add(RecordType::AAAA);
         }
 
-        if ($allowedRecordTypes->contains(RecordType::CNAME) && $subdomainTarget) {
+        if (($allowedRecordsFilterDisabled || $allowedRecordTypes->contains(RecordType::CNAME)) && $subdomainTarget) {
             $types->add(RecordType::CNAME);
         }
 
-        if ($allowedRecordTypes->contains(RecordType::SRV) && $allocation && $subdomainTarget && $srvServiceType) {
+        if (($allowedRecordsFilterDisabled || $allowedRecordTypes->contains(RecordType::SRV)) && $allocation && $subdomainTarget && $srvServiceType) {
             $types->add(RecordType::SRV);
         }
 
@@ -137,7 +138,11 @@ class CloudflareDomain extends Model
      */
     public static function availableDomains(Server $server): Collection
     {
-        $viableDomains = $server->node->belongsToMany(self::class)->get();
+        // Fetch all domains with this allowed node, or with no allowed nodes
+        $viableDomains = CloudflareDomain::query()
+            ->whereHas('nodes', fn ($query) => $query->whereKey($server->node->id))
+            ->orWhereDoesntHave('nodes')
+            ->get();
 
         $availableDomains = $viableDomains->filter(fn (self $item) => !$item->availableRecordTypes($server)->isEmpty());
 
