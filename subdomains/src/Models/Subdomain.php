@@ -74,11 +74,11 @@ class Subdomain extends Model implements HasLabel
         $subdomainTarget = $this->server->node->subdomain_target; // @phpstan-ignore property.notFound
         $node_id = $this->server->node->id;
 
-        if (!$this->domain->nodes()->where('nodes.id', $node_id)->exists()) {
+        if (!($this->domain->nodes->isEmpty() || $this->domain->nodes()->where('nodes.id', $node_id)->exists())) {
             throw new Exception('Domain ' . $this->domain->nameWithPrefix() . ' is not permitted on node ' . $this->server->node->name);
         }
 
-        if (!$this->domain->allowed_record_types->contains($this->record_type)) {
+        if (!($this->domain->allowed_record_types->isEmpty() || $this->domain->allowed_record_types->contains($this->record_type))) {
             throw new Exception('Record type ' . $this->record_type->value . ' is not permitted on domain ' . $this->domain->nameWithPrefix());
         }
 
